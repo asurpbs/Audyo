@@ -162,22 +162,29 @@ public class Audyo {
         return songs;
     }
     
+    /**
+     * Ask a question and get an integer answer
+     * @param prompt Question that you want to ask from the user
+     * @return True when user said yes otherwise, false.
+     */
     public static boolean inputBool(String prompt) {
-        System.out.println(prompt);
         Scanner getInput = new Scanner(System.in);
         boolean True = true;
         while (True) {
+            System.out.println(prompt);
             String input = getInput.next();
-            switch (input) {
+            switch (input.strip()) {
                 case "y" , "Y" : return true;
                 case "n" , "N": return false;
-                default : break;
+                default : {
+                    System.out.println("Invalid input. Try again");
+                }
             }
         }
         return false;
     }
     
-    public static void main(String... args) throws Exception {
+    public static void main(String... args) {
         startup();
         System.out.println("\n\n");
         Song.viewAllSongs();
