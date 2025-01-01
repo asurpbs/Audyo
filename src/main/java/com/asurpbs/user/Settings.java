@@ -26,22 +26,25 @@ public class Settings {
     
     public static final String KEY_SONG_DIR = "Song_dir";
     public static final String KEY_PLAYLIST_DIR = "playList_dir";
-    public static final String KEY_FFMPEG_PATH = "ffmpeg_path";
     
     //public String playList_dir;
-    //public String Song_dir;
-    //public String ffmpeg_path;
-    
+    //public String Song_dir;;
+    /**
+     * Use these values for unit testing
+     */
     public String playList_dir = System.getProperty("user.home") + "\\Desktop\\Music\\PlayList";
     public String Song_dir = System.getProperty("user.home") + "\\Desktop\\Music";
-    public String ffmpeg_path = "";
     
-    private final Path configFilePath;
+    private final Path configFilePath; // The user configuration file's path
     
     public Settings() {
         configFilePath = Paths.get(CONFIG_DIR, CONFIG_FILE_NAME);
     }
     
+    /**
+     * default flow runs when settings instance, instantiation in the Audyo ~ used in main()
+     * @throws IOException 
+     */
     public void initialize() throws IOException {
         if (Files.notExists(configFilePath)) {
             createDefaultConfig();
@@ -51,26 +54,39 @@ public class Settings {
         }
     }
     
+    /**
+     * Create the default configuration file when the config path is no exist in the configuration file's path
+     * @throws IOException 
+     */
     public void createDefaultConfig() throws IOException {
         Files.createDirectories(Paths.get(CONFIG_DIR));
         Properties defaultProperties = new Properties();
-        for (String key : new String[] {KEY_SONG_DIR, KEY_PLAYLIST_DIR, KEY_FFMPEG_PATH}) defaultProperties.setProperty(key, "");
+        for (String key : new String[] {KEY_SONG_DIR, KEY_PLAYLIST_DIR}) defaultProperties.setProperty(key, "");
         defaultProperties.store(new FileWriter(CONFIG_DIR + File.separator + CONFIG_FILE_NAME), getTime().concat(" ~ Audyo Player's user configurations"));
         System.out.println("Configuration file is initialized successfully in " + CONFIG_DIR);
     }
     
+    /**
+     * Load the configuration settings to the program when startup
+     * @throws IOException 
+     */
     public void loadConfig() throws IOException {
         try (FileReader reader = new FileReader(configFilePath.toFile())) {
             Properties properties = new Properties();
             properties.load(reader);
             this.Song_dir = properties.getProperty(KEY_SONG_DIR);
             this.playList_dir = properties.getProperty(KEY_PLAYLIST_DIR);
-            this.ffmpeg_path = properties.getProperty(KEY_FFMPEG_PATH);
             System.out.println("Configurations loaded successfully.");
             reader.close();
         }
     }
     
+    /**
+     * Use to update the key value and write the updated settings to the file
+     * @param key KEY_SONG_DIR or KEY_PLAYLIST_DIR
+     * @param value relevant value 
+     * @throws IOException 
+     */
     public void updateConfig(String key, String value) throws IOException {
         if (Files.notExists(configFilePath)) createDefaultConfig();
         FileReader reader = new FileReader(configFilePath.toFile());
@@ -82,6 +98,10 @@ public class Settings {
         reader.close();
     }
     
+    /**
+     * Use to loading the configuration files form the file when startup - For testing
+     * @throws IOException 
+     */
     public void updateConfig() throws IOException {
         if (Files.notExists(configFilePath)) createDefaultConfig();
         FileReader reader = new FileReader(configFilePath.toFile());
@@ -89,12 +109,15 @@ public class Settings {
         update.load(reader);
         update.setProperty(KEY_SONG_DIR, this.Song_dir);
         update.setProperty(KEY_PLAYLIST_DIR, this.playList_dir);
-        update.setProperty(KEY_FFMPEG_PATH, this.ffmpeg_path);
         update.store(new FileWriter(configFilePath.toFile()), getTime().concat(" ~ Audyo Player's user configurations"));
         System.out.println("Updated properties file successfully!");
         reader.close();
     }
     
+    /**
+     * Use to get the time and date
+     * @return the date and time in dd : mm : yyyy HH : mm : ss format
+     */
     public static String getTime() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
     }

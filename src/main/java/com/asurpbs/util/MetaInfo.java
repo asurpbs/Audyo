@@ -31,7 +31,7 @@ public class MetaInfo {
      * @return as String array - (Title, Artist, Duration, Song's file name with extension)
      */
     public static String[] getAll(File file) {
-        Logger.getLogger("org.jaudiotagger").setLevel(Level.WARNING);
+        Logger.getLogger("org.jaudiotagger").setLevel(Level.WARNING); // To stop printing the log of jaudiotagger
         try {
             AudioFile track = AudioFileIO.read(file);
             Tag tag = track.getTag();
@@ -42,15 +42,18 @@ public class MetaInfo {
         }
         return null;
     }
-    
+    /**
+     * Get the title of the track
+     * @param trackPath - The music file's path
+     * @return Title
+     */
     public static String title(String trackPath) {
         Logger.getLogger("org.jaudiotagger").setLevel(Level.WARNING);
         try {
-            AudioFile track;
-            track = AudioFileIO.read(new File(trackPath));
+            AudioFile track = AudioFileIO.read(new File(trackPath));
             return track.getTag().getFirst(FieldKey.TITLE);
         } catch (IOException | CannotReadException | InvalidAudioFrameException | ReadOnlyFileException | TagException e) {
-                System.out.println(e.getMessage());
+            Logger.getLogger(MetaInfo.class.getName()).log(Level.SEVERE, null, e);
         }
         return null;
     }

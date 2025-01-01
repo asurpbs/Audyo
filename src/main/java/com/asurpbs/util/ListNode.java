@@ -18,6 +18,10 @@ public class ListNode {
         this.previous = this.next = null;
     }
     
+    /**
+     * Get an object of the list
+     * @return the object
+     */
     public Object getObject() {
         return this.entity;
     }

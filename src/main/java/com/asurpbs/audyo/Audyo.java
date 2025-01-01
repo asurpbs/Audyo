@@ -15,7 +15,6 @@ import com.asurpbs.user.Settings;
 import com.asurpbs.util.MetaInfo;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,11 +27,11 @@ public class Audyo {
     /**
      * Normal startup process of the program
      */
+    
     public static void startup() {
         fetchUserConfiguration();
         fetchDirectories();
     }
-    
     
     /**
      * Use to load or refresh settings when the settings have been changed
@@ -45,29 +44,24 @@ public class Audyo {
      * Scan all music and playlist file directories
      */
     public static void fetchDirectories() {
-        try {
             scanMusicDir(config.Song_dir);
             scanPlaylistDir(config.playList_dir);
-        } catch (IOException ex) {
-            Logger.getLogger(Audyo.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (Exception ex) {
-            Logger.getLogger(Audyo.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
+    
     /**
      * Custom directory scan ~ use to scan the music folder to detect songs that are added when the program is using
-     * (Not impelemented this in the program yet)
+     * (Not impelimented this in the program yet)
      * @param choice - S or P | Stands for Song and P stands for playlist
      */
     public static void fetchDirectories(char choice) {
         try {
-            if (choice == 's' || choice == 'S') scanMusicDir(config.Song_dir);
-            else if (choice == 'p' || choice == 'P') {scanPlaylistDir(config.playList_dir);}
-            else {System.out.println("Invalid input. Try again");}
-        } catch (IOException ex) {
-            Logger.getLogger(Audyo.class.getName()).log(Level.SEVERE, null, ex);
+            switch (choice) {
+                case 's' | 'S' -> scanMusicDir(config.Song_dir);
+                case 'p' | 'P' -> scanPlaylistDir(config.playList_dir);
+                default -> System.out.println("(: Invalid input. Try again.");
+            }
         } catch (Exception ex) {
-            Logger.getLogger(Audyo.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Error: " + ex.getMessage());
         }
     }
     
@@ -91,6 +85,7 @@ public class Audyo {
      * @param directory - Music folder's path
      */
     public static void scanMusicDir(String directory) {
+        Logger.getLogger("org.jaudiotagger").setLevel(Level.WARNING);
         File[] files = new File(directory).listFiles();
         for (File file : files) {
             if (isValidFile(file, Song.supportedFormats)) {
@@ -101,19 +96,6 @@ public class Audyo {
     }
     
     
-    /**
-     * Get back the reference of needed song instance from the Song.allList
-     * @param name - song name
-     * @return the reference to the song instance in the heap
-     */
-    public static Song getSongByName(String name) {
-        Object[] objLists = Song.allList.getObjectArray();
-        for (Object obj: objLists) {
-            if (obj instanceof Song temp) {
-                if (temp.title.toLowerCase().equals(name.trim().toLowerCase())) return temp;
-            } 
-        } return null;
-    }
     
     /**
      * Get the playlist name from playlist file's name
@@ -122,21 +104,20 @@ public class Audyo {
      * @param file - Play list file (m3u8)
      * @return the playlist's name
      */
-    public static String getPlayListName (File file) {
+    public static String getFormattedPlayListName (File file) {
         return FilenameUtils.removeExtension(file.getName()).replace("_", " ");
     }
     
     /**
      * Check all playlist file's in the given directory
      * @param directory - Music folder's path
-     * @throws java.lang.Exception
      */
-    public static void scanPlaylistDir(String directory) throws Exception {
+    public static void scanPlaylistDir(String directory) {
         File[] files = new File(directory).listFiles();
         for (File file : files) {
             if (isValidFile(file, PlayList.supportedFormats)) {
                 // Read playlist file and added to PlayList.allList linkedList
-                PlayList.allList.insertToTail(new PlayList(getPlayListName(file)));
+                PlayList.allList.insertToTail(new PlayList(getFormattedPlayListName(file)));
                 settingUpPlayListSong(file);
             }
         }
@@ -147,8 +128,7 @@ public class Audyo {
      * @param playListFile - m3u8 playlist file
      */
     public static void settingUpPlayListSong(File playListFile) {
-        Logger.getLogger("org.jaudiotagger").setLevel(Level.WARNING);
-        PlayList temp = getPlaylistByName(getPlayListName(playListFile));
+        PlayList temp = PlayList.getByName(getFormattedPlayListName(playListFile));
         Scanner reader;
         try {
             reader = new Scanner(playListFile);
@@ -156,9 +136,9 @@ public class Audyo {
                 String data = reader.nextLine().strip();
                 if (data.isEmpty() || data.charAt(0) == '#') {}
             else {
-                    Song trackSong = getSongByName(MetaInfo.title(data));
+                Song trackSong = Song.getByName(MetaInfo.title(data));
                 if (trackSong != null) {
-                    temp.addSong(trackSong);
+                    temp.songs.insertToTail(trackSong);
                 }
             }
             }
@@ -167,41 +147,54 @@ public class Audyo {
         }
     }
     
-    /**
-     * Get back the reference of needed playlist instance from the PlayList.allList
-     * @param name - Playlist name
-     * @return the reference to the playlist instance in the heap
-     */
-    public static PlayList getPlaylistByName(String name) {
-        Object[] objLists = PlayList.allList.getObjectArray();
-        for (Object obj: objLists) {
-            if (obj instanceof PlayList temp) {
-                if (temp.name.toLowerCase().equals(name.trim().toLowerCase())) return temp;
-            } 
-        } return null;
-    }
     
     /**
-     * Use this for unit testing purpose
+     * COnvert array of objects to songs
+     * @param objList - object typed array
+     * @return array of songs
      */
-    private static void unitTest() {
-        try {
-            PlayList.create("Hello");
-            PlayList.viewAllPlayLists();
-            PlayList playlist = getPlaylistByName("Hello");
-            playlist.addSong(getSongByName("Hotel California (2013 Remaster)"));
-            playlist.addSong(getSongByName("Smells Like Teen Spirit"));
-            System.out.println("-------Check one playlist's songs----------");
-            playlist.viewAllSongs();
-            System.out.println("\n");
-            System.out.println(playlist.songs.getNoOfElements());
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+    public static Song[] ObjectToSong_Array(Object[] objList) {
+        Song[] songs = new Song[objList.length];
+        int i = 0;
+        for (Object obj : objList) {
+            songs[i++] = (Song) obj;
         }
+        return songs;
+    }
+    
+    public static boolean inputBool(String prompt) {
+        System.out.println(prompt);
+        Scanner getInput = new Scanner(System.in);
+        boolean True = true;
+        while (True) {
+            String input = getInput.next();
+            switch (input) {
+                case "y" , "Y" : return true;
+                case "n" , "N": return false;
+                default : break;
+            }
+        }
+        return false;
     }
     
     public static void main(String... args) throws Exception {
         startup();
-        unitTest();
+        System.out.println("\n\n");
+        Song.viewAllSongs();
+        System.out.println("\n\n");
+        PlayList.create("Classic Hits");
+        PlayList newPlayList = PlayList.getByName("Classic Hits");
+        System.out.println("\n\n");
+        String[] titles = {"Hotel California", "Imagine", "Smells Like Teen Spirit", "Bohemian Rhapsody", "Hey Jude"};
+        for (String title : titles) newPlayList.addSong(title);
+        System.out.println("\n\n");
+        newPlayList.viewAllSongs();
+        System.out.println("\n\n");
+        if (inputBool("Do you wannt to play the songs in new playlist in ascending order? [Y/n]")) newPlayList.playFromBegining();
+        else if (inputBool("Do you wannt to play the songs in new playlist in descending order? [Y/n]")) newPlayList.playFromEnd();
+        else if (inputBool("Do you wannt to delete Hey Jude & Shape Of You songs? [Y/n]")) { 
+            newPlayList.removeSong("Hey Jude");
+            newPlayList.removeSong("Shape Of You");
+        }
     }
 }

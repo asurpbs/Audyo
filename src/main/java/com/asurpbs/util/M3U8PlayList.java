@@ -4,16 +4,17 @@
  */
 package com.asurpbs.util;
 
-import com.asurpbs.audyo.Audyo;
-import com.asurpbs.user.PlayList;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  *
@@ -26,52 +27,28 @@ public class M3U8PlayList {
         this.playlist = playlistPath;
     }
     
-    public boolean isEmpty() {
-        try (Scanner reader = new Scanner(new File(this.playlist))) {
-            if (reader.hasNextLine()) {
-                String data = reader.nextLine().strip();
-                return data.isEmpty() || data.charAt(0) == '#';
+    /**
+     * add song's path to the playlist file
+     * @param songPath - Path to the music file
+     */
+    public void writer(String songPath) {
+        File playlistFile = new File(this.playlist);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(playlistFile, true))) {
+            if (!playlistFile.exists() || playlistFile.length() == 0) {
+                writer.write("#EXTM3U");
+                writer.newLine();
             }
-            return true;
-        } catch (FileNotFoundException ex) {
-            PlayList.create(this.playlist.replace(Audyo.config.playList_dir + File.separator, "").replace("_"," ").replace(".m3u8", ""));
-            return true;
-        }
-    }
-    
-    private void defineM3U8() {
-        try {
-            OutputStream outputStream = new FileOutputStream(this.playlist);
-            byte[] bytes = "#EXTM3U\n".getBytes();
-            outputStream.write(bytes);
-            outputStream.close();
-        } catch (FileNotFoundException ex) {
-            System.out.println(ex.getMessage());
+            writer.write("#EXT-X-RATING:0");
+            writer.newLine();
+            writer.write(songPath);
+            writer.newLine();
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
         }
-    }
-    
-    private void write(String fileName) {
-        try {
-            OutputStream outputStream = new FileOutputStream(this.playlist, true);
-            byte[] bytes = "#EXT-X-RATING:0\n".concat(Audyo.config.Song_dir + File.separator + fileName + "\n").getBytes();
-            outputStream.write(bytes);
-            outputStream.close();
-        } catch (FileNotFoundException ex) {
-            System.out.println(ex.getMessage());
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-        }
-    }
-    
-    public void writer(String songFileName) {
-        if (this.isEmpty()) this.defineM3U8();
-        this.write(songFileName);
     }
     
     /**
-     * 
+     * Use create to playlist file (.m3u8)
      * @param filePath - The playlist name that you whish to create
      */
     public static void create(String filePath)  {
@@ -84,6 +61,54 @@ public class M3U8PlayList {
             }
         } catch (IOException ex) {
                 System.out.println(ex.getMessage());
+        }
+    }
+    
+    /**
+     * Use to update the playlist file when a song is deleted from the playlist.
+     * ~ Remove the song's path with #EXT-X-RATING
+     * 
+     * @param songPath - Path to the song file
+     */
+    public void remove(String songPath) {
+        File playlistFile = new File(this.playlist);
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(playlistFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).equals(songPath)) {
+                if (i > 0 && lines.get(i - 1).startsWith("#EXT-X-RATING")) {
+                    lines.remove(i - 1);
+                    i--;
+                }
+                lines.remove(i);
+                i--;
+            }
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(this.playlist))) {
+            for (String line : lines) {
+                writer.write(line);
+                writer.newLine();
+            }
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    /**
+     * Use to delete all playlist information
+     */
+    public void removeAll() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(this.playlist))) {
+            writer.write("");
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
         }
     }
 

@@ -9,6 +9,7 @@ package com.asurpbs.util;
  * @author Mithila Prabashwara
  */
 
+
 public class DoublyLinkedList {
     private ListNode head, tail;
     private int noOfElements;
@@ -18,17 +19,26 @@ public class DoublyLinkedList {
         this.noOfElements = 0;
     }
     
-    // return the number of elements in the dublylinked list
+    /**
+     * Use to get the length of the doubly linked list
+     * @return the all elements in the doubly linked list
+     */
     public int getNoOfElements() {
         return this.noOfElements;
     }
     
-    // check the list, is empty or not
+    /**
+     * Check is the doubly linked list empty or not?
+     * @return True when the list is empty
+     */
     public boolean isEmpty() {
         return this.noOfElements == 0;
     }
     
-    //insert elements to head
+    /**
+     * insert an elements to head
+     * @param entity - Object
+     */
     public void insertToHead(Object entity) {
         ListNode node = new ListNode(entity);
         if (this.isEmpty()) this.head = this.tail = node; 
@@ -40,7 +50,10 @@ public class DoublyLinkedList {
         this.noOfElements ++;
     }
     
-    //insert elements to tail
+    /**
+     * insert elements to tail
+     * @param entity - object
+     */
     public void insertToTail(Object entity) {
         ListNode node = new ListNode(entity);
         if (this.isEmpty()) this.head = this.tail = node; 
@@ -52,19 +65,32 @@ public class DoublyLinkedList {
         this.noOfElements ++;
     }
     
-    //access head
+    /**
+     * Use to access the head element
+     * 
+     * @return the head object
+     * @throws Exception when the list is empty
+     */
     public Object getfirstElement() throws Exception {
         if (!this.isEmpty()) return this.head.getObject();
         else throw new Exception("List is empty.");
     }
     
-    //access tail
+    /**
+     * Use to access the tail element
+     * 
+     * @return the tail object
+     * @throws Exception when the list is empty
+     */
     public Object getlastElement() throws Exception {
         if (!this.isEmpty()) return this.tail.getObject();
         else throw new Exception("List is empty.");
     }
     
-    //delete from front
+    /**
+     * Delete the head element
+     * @throws Exception when the list is empty 
+     */
     public void deleteFromFront() throws Exception {
         if (this.isEmpty()) throw new Exception("List is empty.");
         // (-) Object entity = this.head.getObject();
@@ -76,7 +102,10 @@ public class DoublyLinkedList {
         this.noOfElements-- ;
     }
     
-    //delete from last
+    /**
+     * Delete the tail element
+     * @throws Exception when the list is empty 
+     */
     public void deleteFromLast() throws Exception {
         if (this.isEmpty()) throw new Exception("List is empty.");
         // (-) Object entity = this.tail.getObject();
@@ -88,15 +117,21 @@ public class DoublyLinkedList {
         this.noOfElements-- ;
     }
     
-    //delete a selected element
+    /**
+     * Use to delete selected element from the list
+     * @param entity -object
+     * @throws Exception when the list is empty
+     */
     public void delete(Object entity) throws Exception {
         if (this.isEmpty()) throw new Exception("List is empty.");
         ListNode temp = this.head;
-        while (temp.getObject().equals(entity)) {
-            if (temp.next == null) throw new Exception("Item was not found");
+        while (temp != null && !temp.getObject().equals(entity)) {
             temp = temp.next;
-        } if (this.tail == this.head) this.tail = this.head = null;
-        else if (temp == this.head) {
+        }
+        if (temp == null) throw new Exception("Item was not found");
+        if (this.tail == this.head) {
+            this.tail = this.head = null;
+        } else if (temp == this.head) {
             this.head = this.head.next;
             this.head.previous = null;
         } else if (temp == this.tail) {
@@ -105,12 +140,14 @@ public class DoublyLinkedList {
         } else {
             temp.previous.next = temp.next;
             temp.next.previous = temp.previous;
-            
         }
-        this.noOfElements-- ;
+        this.noOfElements--;
     }
     
-    //delete all objects
+    /**
+     * Delete all objects
+     * @throws Exception when the list is empty
+     */
     public void deleteAll() throws Exception {
         while (!this.isEmpty()) {
             this.deleteFromFront();
@@ -118,7 +155,11 @@ public class DoublyLinkedList {
         this.noOfElements = 0;
     }
     
-    //return object as list
+    /**
+     * Get the all objects as an array
+     * 
+     * @return the all objects in the linked list as an objects array
+     */
     public Object[] getObjectArray() {
         if (this.isEmpty()) {
             return new Object[0];
@@ -130,5 +171,20 @@ public class DoublyLinkedList {
             temp = temp.next;
         }
         return arrObjects;
+    }
+    
+    /**
+     * Check, the object does exist or not?
+     * @param entity - The object 
+     * @return True when the object exists in the list
+     */
+    public boolean isExist(Object entity) {
+        if (this.isEmpty()) return false;
+        ListNode temp = this.head;
+        while (temp != null) {
+            if (temp.getObject().equals(entity)) return true;
+            temp = temp.next;
+        }
+        return false;
     }
 }
